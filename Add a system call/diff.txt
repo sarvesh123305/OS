@@ -1,0 +1,67 @@
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/arch and linux-5.11.9/arch
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/block and linux-5.11.9/block
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/certs and linux-5.11.9/certs
+Only in linux-5.11.9: .config
+Only in linux-5.11.9: .config.old
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/crypto and linux-5.11.9/crypto
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/Documentation and linux-5.11.9/Documentation
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/drivers and linux-5.11.9/drivers
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/fs and linux-5.11.9/fs
+Only in linux-5.11.9: hello
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/include and linux-5.11.9/include
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/init and linux-5.11.9/init
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/ipc and linux-5.11.9/ipc
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/kernel and linux-5.11.9/kernel
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/lib and linux-5.11.9/lib
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/LICENSES and linux-5.11.9/LICENSES
+diff -c /home/richforever/Desktop/linux-5.11.9/Makefile linux-5.11.9/Makefile
+*** /home/richforever/Desktop/linux-5.11.9/Makefile	2021-03-24 16:24:19.000000000 +0530
+--- linux-5.11.9/Makefile	2024-01-31 19:53:20.237959171 +0530
+***************
+*** 1097,1103 ****
+  export MODULES_NSDEPS := $(extmod-prefix)modules.nsdeps
+  
+  ifeq ($(KBUILD_EXTMOD),)
+! core-y		+= kernel/ certs/ mm/ fs/ ipc/ security/ crypto/ block/
+  
+  vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, \
+  		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+--- 1097,1103 ----
+  export MODULES_NSDEPS := $(extmod-prefix)modules.nsdeps
+  
+  ifeq ($(KBUILD_EXTMOD),)
+! core-y		+= kernel/ certs/ mm/ fs/ ipc/ security/ crypto/ block/ hello/
+  
+  vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, \
+  		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+Only in linux-5.11.9: .missing-syscalls.d
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/mm and linux-5.11.9/mm
+Only in linux-5.11.9: modules.builtin
+Only in linux-5.11.9: modules.builtin.modinfo
+Only in linux-5.11.9: modules.order
+Only in linux-5.11.9: .modules.order.cmd
+Only in linux-5.11.9: Module.symvers
+Only in linux-5.11.9: .Module.symvers.cmd
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/net and linux-5.11.9/net
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/samples and linux-5.11.9/samples
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/scripts and linux-5.11.9/scripts
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/security and linux-5.11.9/security
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/sound and linux-5.11.9/sound
+Only in linux-5.11.9: System.map
+Only in linux-5.11.9: .tmp_393249
+Only in linux-5.11.9: .tmp_System.map
+Only in linux-5.11.9: .tmp_vmlinux.kallsyms1
+Only in linux-5.11.9: .tmp_vmlinux.kallsyms1.o
+Only in linux-5.11.9: .tmp_vmlinux.kallsyms1.S
+Only in linux-5.11.9: .tmp_vmlinux.kallsyms2
+Only in linux-5.11.9: .tmp_vmlinux.kallsyms2.o
+Only in linux-5.11.9: .tmp_vmlinux.kallsyms2.S
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/tools and linux-5.11.9/tools
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/usr and linux-5.11.9/usr
+Only in linux-5.11.9: .version
+Common subdirectories: /home/richforever/Desktop/linux-5.11.9/virt and linux-5.11.9/virt
+Only in linux-5.11.9: vmlinux
+Only in linux-5.11.9: .vmlinux.cmd
+Only in linux-5.11.9: vmlinux-gdb.py
+Only in linux-5.11.9: vmlinux.o
+Only in linux-5.11.9: vmlinux.symvers
