@@ -10,3 +10,104 @@ nautilus .
 ls
 clear
 code .
+ls
+clear
+cd ..
+ls
+clear
+ohho
+clear
+ls
+ls > a
+ls > a
+ls
+ls > a
+ls > a
+ls > a
+ls > a
+ls
+ls > a
+[A
+ls > a
+ls > a
+ls > a
+[A
+clear
+ls > a
+[A
+ls > a
+ls > a
+ls ? a
+ls > a
+ls > a
+clear
+ls > a
+ls 
+ls > a
+ls > a
+ls > a
+[A
+ls > a
+ls
+ls > a
+clear
+ls
+ls
+cat a
+rm a
+clear
+man ls
+ls 
+ls . 
+clear
+ls -a
+ls
+ls -a
+ls
+ls > sanket
+ls
+ls
+ls > a
+ls
+ls
+ls
+ls > a
+ls
+ls
+ls
+ls > a
+ls
+ls > a
+ls
+ls
+[A
+ls
+ls > a
+clear
+ls 
+ls > a
+ls
+ls
+ls > a
+ls
+ls
+ls > a
+ls
+ls
+ls > a
+ls
+ls > porat
+ls
+clear
+clear
+cat < klsa
+clear
+ls
+ls > a
+ls
+ls  > sarvesh
+ls
+rm sarvesh
+rm a
+ls
+clear

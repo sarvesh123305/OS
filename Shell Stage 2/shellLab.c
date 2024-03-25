@@ -271,6 +271,8 @@ int executeEnviromentCommand(char *buf, int bufferLength, int *isP1set, int *col
 // additional functionality change username , remove " " if present in arguements
 void customExecvpWithPath(int colonPresent, char directoryPaths[MAX_LEN][MAX_LEN], char *arguments[MAX_LEN])
 {
+	// fprintf(stderr,"%d yerror" ,colonPresent);
+
 	for (int i = 0; i < colonPresent; i++)
 	{
 		char tempString[MAX_LEN];
@@ -409,7 +411,6 @@ void setArguements(char *buf, char *arguments[MAX_LEN], int *argCount)
 		token = strtok(NULL, " ");
 	}
 	arguments[*argCount] = NULL;
-	printf("\nARGV: %s %d",buf,*argCount);
 	return;
 }
 void removeQuotesIfPresent(char *str)
@@ -465,45 +466,14 @@ pipeline(char ***cmd)
 		}
 	}
 }
-
-
-int main()
-{ 
-	pid_t pid; 
-	char buf[MAX_LEN], directoryPaths[MAX_LEN][MAX_LEN], currentDirtoryPath[MAX_LEN];
-	char *path = getenv("PATH"); // sets default path to that of shell path
-	setenv("CUST_PATH", path, 1);
-	// system("clear");
-	int isP1set = 0, colonPresent = 0;
-	updatePath(currentDirtoryPath, isP1set);
-	returnPaths(directoryPaths, path, countColonPresentInPath(path)); // default path is this
-	
-
-	// Maintaining history here
-	LinkedList tail;
-	Node* iterator;
-	initList(&tail);
-	initList(&iterator);
-	initialLoadLinkedList(&tail);
-	
-	while (1)
-	{
-		strcpy(path, getenv("CUST_PATH"));
-		displayPrompt();
-		 if (!fgets(buf, MAX_LEN, stdin))
-		 {
-		  	printf("Exitt!! || Ctrl+D");
-		 	break;
-		 }
-		removeTrailingSpacesIfAny(buf);
-		int bufferLength = strlen(buf), hasInput, hasOutput, stdOut = dup(STDOUT_FILENO), stdIn = dup(STDIN_FILENO);
-		appendToFileAndLinkedList(&tail,buf);
- 
-
-		if (executeEnviromentCommand(buf, bufferLength, &isP1set, &colonPresent, directoryPaths))
+int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX_LEN][MAX_LEN],char *currentDirtoryPath
+,LinkedList *tail,char *path){
+		int colonPresent = 0,hasInput, hasOutput, stdOut = dup(STDOUT_FILENO), stdIn = dup(STDIN_FILENO),argCount = 0;
+		colonPresent = countColonPresentInPath(path);
+		if (executeEnviromentCommand(buf, bufferLength, isP1set, &colonPresent, directoryPaths))
 		{
-			updatePath(currentDirtoryPath, isP1set);
-			continue;
+			updatePath(currentDirtoryPath, *isP1set);
+			return 1; //Enviroment Command
 		}
 
 		int isPipelinePresent = getPipelinePresentStatus(buf,bufferLength);
@@ -578,54 +548,61 @@ int main()
 			{
 			case 1:
 				printf("Input file missing , Please Enter Input file\n");
-				continue;
+				return -1 ;  //Input file missing
 				break;
 			case 2:
 				printf("Command not found\n");
-				continue;
+				return -2 ; //Command not found
 				break;
 			case 3:
 				printf("Output file missing , Enter an Output file\n");
-				continue;
+				return -3;//Output file missing
 				break;
+			// default : printf("Redirection not present");
 			}
 		}
 		else
 		{
-			int wordCount = returnArguementCount(buf), argCount = 0, leng = strlen(buf);
+			int wordCount = returnArguementCount(buf), leng = strlen(buf);
 			buf[leng - 1] = '\0';
 
 			setArguements(buf, arguments, &argCount);
-			switch (checkForCustomCommands(argCount, arguments, currentDirtoryPath, isP1set,&tail))
+			switch (checkForCustomCommands(argCount, arguments, currentDirtoryPath, *isP1set,tail))
 			{
-			case 1:
-				exit(EXIT_SUCCESS);
-				break;
-			case 2:
-			case 3:
-				continue;
-				break;
+				case 1:
+					exit(EXIT_SUCCESS);
+					break;
+				case 2:
+				case 3:
+					// continue;
+					return 10;//10 for continue
+					break;
 			}
+		
 			
 		}
-		pid = fork();
+		// if(argCount > 0  && arguements[argCount-1])
+		// printf("%d argCount",argCount);
+		int pid = fork();
 		if (pid == FORK_FAILURE)
 		{
-			perror("Forking the process failedd!!,Exiting the program");
+
+			perror("Forking the process failed!!,Exiting the program");
 			exit(EXIT_FAILURE);
 		}
 
 		if (pid == CHILD)
 		{
-			if (isRedirectionPresent)
-			{
+			// if (isRedirectionPresent)
+			// {
+
 				if (hasInput)
 				{
 					int newInput = open(inputFile, O_RDONLY); // Input would be from file
 					if (newInput == NOTPOSSIBLE)
 					{
 						perror("Error performing Input Redirection");
-						continue;
+						return 10;
 					}
 					dup2(newInput, 0); // oldfd newfd    replaces fd for above newinput file to 0 i.e stdin
 					close(newInput);   // Original assigned fp is closed because it is now pointing to stdin
@@ -633,22 +610,30 @@ int main()
 
 				if (hasOutput)
 				{
+
 					int newOutput;
 					if (hasOutput) // Now Output would be to file
 						newOutput = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 					// Refer Documentation
+					printf("move towards head");
 
-					if (newOutput == NOTPOSSIBLE)
-					{
-						perror("Error performing Output Redirection");
-						continue;
-					}
-
+					// if (newOutput == NOTPOSSIBLE)
+					// {
+					// 	perror("Error performing Output Redirection");
+					// 	return  10 ;//continue
+					// }
 					dup2(newOutput, 1); // replaces ff for above newoutput file to 1 i.e stdout
 					close(newOutput);	// Original assigned fp is closed because it is now pointing to stdout
 				}
-				customExecvpWithPath(colonPresent, directoryPaths, args);
-				if (hasInput)
+
+				if(isRedirectionPresent)
+					customExecvpWithPath(colonPresent, directoryPaths, args);
+				else{
+					colonPresent = countColonPresentInPath(path);
+					customExecvpWithPath(colonPresent, directoryPaths, arguments);
+				}
+
+ 				if (hasInput)
 				{
 					dup2(stdIn, 0); // Resetting the changes done to input
 					close(stdIn);	// Orig fd of stdin close
@@ -658,17 +643,51 @@ int main()
 					dup2(stdOut, 1); // Resetting the changes done to input
 					close(stdOut);	 // Orig fd of stdout close
 				}
-			}
-			else
-			{
-				colonPresent = countColonPresentInPath(path);
-				customExecvpWithPath(colonPresent, directoryPaths, arguments);
-			}
+			// }
+			// else
+			// {
+			// 	colonPresent = countColonPresentInPath(path);
+			// 	customExecvpWithPath(colonPresent, directoryPaths, arguments);
+			// }
 		}
 		else
 		{
 			wait(NULL); // parent waiting for a child
 		}
+	}
+
+int main()
+{ 
+	pid_t pid; 
+	char buf[MAX_LEN], directoryPaths[MAX_LEN][MAX_LEN], currentDirtoryPath[MAX_LEN];
+	char *path = getenv("PATH"); // sets default path to that of shell path
+	setenv("CUST_PATH", path, 1);
+	// system("clear");
+	int isP1set = 0;
+	updatePath(currentDirtoryPath, isP1set);
+	returnPaths(directoryPaths, path, countColonPresentInPath(path)); // default path is this
+	
+
+	// Maintaining history here
+	LinkedList tail;
+	Node* iterator;
+	initList(&tail);
+	initList(&iterator);
+	initialLoadLinkedList(&tail);
+	
+	while (1)
+	{
+		strcpy(path, getenv("CUST_PATH"));
+		displayPrompt();
+		 if (!fgets(buf, MAX_LEN, stdin))
+		 {
+		  	printf("Exitt!! || Ctrl+D");
+		 	break;
+		 }
+		removeTrailingSpacesIfAny(buf);
+		int bufferLength = strlen(buf);
+		appendToFileAndLinkedList(&tail,buf);
+		mainFunction(buf,bufferLength,&isP1set,directoryPaths,currentDirtoryPath,&tail,path);
 	}
 	exit(EXIT_SUCCESS);
 }
