@@ -1,113 +1,64 @@
+clear
 ls
+cat < history.txt
+nice
+lkasd
+clear
 ls
-cd ..
-[A
-àÒÜ gclear
+cat < porat
+cat < porat > siddhithorat
+ls
+rm siddhithorat
+ls
+clear
+ls > a
+ls
+ls > a
+ls > sui
+l
+sls
+ls
+rm sui
+clear
+clear
+ls
+ls &
+ls
+ls &
+ls &
+ls &
+ls
+ls &
+ls & 
+ls &
+ls
+ls & 
+clear
+clear
+ls &
+ls &
+ls
+cc t.c
+./a.out
+cc t.c -o amba
+./amba
+amba
+source amba
+sleep 10
+sleep 10
+sleep 10
+ks
+ls
+clear
+sleep 10
+clear
+a
+sleep 10
+clear
+ls
+sleep 10
+clear
+sleep 10
+clear
 nautilus .
-ls
-nautilus . &
-nautilus .
-ls
-clear
-code .
-ls
-clear
-cd ..
-ls
-clear
-ohho
-clear
-ls
-ls > a
-ls > a
-ls
-ls > a
-ls > a
-ls > a
-ls > a
-ls
-ls > a
-[A
-ls > a
-ls > a
-ls > a
-[A
-clear
-ls > a
-[A
-ls > a
-ls > a
-ls ? a
-ls > a
-ls > a
-clear
-ls > a
-ls 
-ls > a
-ls > a
-ls > a
-[A
-ls > a
-ls
-ls > a
-clear
-ls
-ls
-cat a
-rm a
-clear
-man ls
-ls 
-ls . 
-clear
-ls -a
-ls
-ls -a
-ls
-ls > sanket
-ls
-ls
-ls > a
-ls
-ls
-ls
-ls > a
-ls
-ls
-ls
-ls > a
-ls
-ls > a
-ls
-ls
-[A
-ls
-ls > a
-clear
-ls 
-ls > a
-ls
-ls
-ls > a
-ls
-ls
-ls > a
-ls
-ls
-ls > a
-ls
-ls > porat
-ls
-clear
-clear
-cat < klsa
-clear
-ls
-ls > a
-ls
-ls  > sarvesh
-ls
-rm sarvesh
-rm a
-ls
 clear

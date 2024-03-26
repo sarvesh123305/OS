@@ -26,6 +26,14 @@ typedef struct Node
 	struct Node *prev;
 
 } Node;
+struct bg_job
+{
+    char job_name[300];
+    pid_t PID;  
+};
+
+typedef struct bg_job bg_job;
+bg_job jobs[50];
 
 typedef Node *LinkedList;
 
@@ -173,6 +181,7 @@ int returnArguementCount(char *argv)
 }
 int isExecutablePresent(char *filename)
 {
+	// printf("What's the issue ,I did that  ? %d",(access(filename, X_OK) == 0));
 	return (access(filename, X_OK) == 0);
 }
 int countColonPresentInPath(char *path)
@@ -372,8 +381,7 @@ int setRedirection(char *command, int *hasInput, int *hasOutput, char **outputFi
 			return 1;
 
 		*inputFile = strtok(inputTokens[1], " \n\r\t");
-		// printf("daasd : %s",*inputFile);
-		if (isExecutablePresent(*inputFile))
+		if (!isExecutablePresent(*inputFile))
 			return 2;
 	}
 
@@ -551,8 +559,8 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 				return -1 ;  //Input file missing
 				break;
 			case 2:
-				printf("Command not found\n");
-				return -2 ; //Command not found
+				printf("File not found\n");
+				return -2 ; //File not found
 				break;
 			case 3:
 				printf("Output file missing , Enter an Output file\n");
@@ -581,8 +589,11 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 		
 			
 		}
-		// if(argCount > 0  && arguements[argCount-1])
-		// printf("%d argCount",argCount);
+		if(argCount > 0  && !strcmp(arguments[argCount-1], "&")) // background jobs
+		{
+			//YET TO DO This, till then ignore background jobs so as to bypass errors
+			arguments[argCount-1] = '\0';
+		}
 		int pid = fork();
 		if (pid == FORK_FAILURE)
 		{
@@ -599,11 +610,11 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 				if (hasInput)
 				{
 					int newInput = open(inputFile, O_RDONLY); // Input would be from file
-					if (newInput == NOTPOSSIBLE)
-					{
-						perror("Error performing Input Redirection");
-						return 10;
-					}
+					// if (newInput == NOTPOSSIBLE)
+					// {
+					// 	perror("Error performing Input Redirection");
+					// 	return 10;
+					// }
 					dup2(newInput, 0); // oldfd newfd    replaces fd for above newinput file to 0 i.e stdin
 					close(newInput);   // Original assigned fp is closed because it is now pointing to stdin
 				}
@@ -615,7 +626,7 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 					if (hasOutput) // Now Output would be to file
 						newOutput = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 					// Refer Documentation
-					printf("move towards head");
+					// printf("move towards head");
 
 					// if (newOutput == NOTPOSSIBLE)
 					// {
@@ -626,10 +637,10 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 					close(newOutput);	// Original assigned fp is closed because it is now pointing to stdout
 				}
 
+				colonPresent = countColonPresentInPath(path);
 				if(isRedirectionPresent)
 					customExecvpWithPath(colonPresent, directoryPaths, args);
 				else{
-					colonPresent = countColonPresentInPath(path);
 					customExecvpWithPath(colonPresent, directoryPaths, arguments);
 				}
 
@@ -652,10 +663,131 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 		}
 		else
 		{
-			wait(NULL); // parent waiting for a child
+			waitpid(pid, NULL, 0);
+			// wait(NULL); // parent waiting for a child
 		}
 	}
+void handler(int num){
+	// write(STDOUT_FILENO,"I won't die\n",13);
+	
+}
 
+void shift(int i)
+{
+     for(int j=i; j < back_g-1; j++)
+     {
+          strcpy(jobs[i].job_name, jobs[i+1].job_name);
+          jobs[i].PID = jobs[i+1].PID;
+     }
+     
+     back_g--;
+}
+void handler(int sig)
+{
+     int x;
+     pid_t pid = waitpid(-1, &x, WNOHANG);
+
+     if(pid > 0)
+     {
+          char str[200]; int f =0;
+          for(int i=0; i < back_g; i++)
+          {
+               if(jobs[i].PID == pid)
+               {
+
+                    strcpy(str, jobs[i].job_name);
+                    shift(i);
+                    f = 1;      
+                    break;
+               }
+          }
+
+          if(WEXITSTATUS(x) == 0 && WIFEXITED(x) && f)
+          fprintf(stderr,"\033[1;31m\n%s with PID %d exited normally\n\033[0m", str, pid);
+     
+          else if(f) fprintf(stderr,"\033[1;31m\n%s with PID %d failed to exit normally\n\033[0m",str, pid);
+          
+          if(f) prompt();
+          fflush(stdout);
+     }
+     
+     return;
+}
+
+void run(char **args, int no_args, int bg)
+{
+     int status;
+     pid_t pid = fork(), wpid;
+     args[no_args] = NULL;
+
+     if (pid < 0) 
+     {    
+          perror("Error");
+          exit(EXIT_FAILURE);
+     }
+
+     else if (pid == 0) 
+     {   
+          setpgid(0, 0);
+          if (execvp(args[0], args) < 0) 
+          {     
+               perror("Command not found");
+               exit(EXIT_FAILURE);
+          }
+     }
+     else 
+     {
+          if(bg == 0)
+          {
+
+               CHILD_ID = pid;
+               strcpy(CURR_JOB, args[0]);
+               
+               for(int i = 1; i < no_args-1; i++)
+               {
+                    strcat(CURR_JOB, " ");
+                    strcat(CURR_JOB, args[i]);
+               }
+
+               signal(SIGTTIN, SIG_IGN);
+
+               signal(SIGTTOU, SIG_IGN);
+               tcsetpgrp(STDIN_FILENO, pid);
+               //signal(SIGTSTP, ctrl_z);
+               wpid = waitpid(pid, &status, WUNTRACED);
+               tcsetpgrp(STDIN_FILENO, getpgrp());
+               signal(SIGTTIN, SIG_DFL);
+               signal(SIGTTOU, SIG_DFL);
+
+               if(WIFSTOPPED(status))
+               {
+
+                    printf("%s with PID %d suspended\n", CURR_JOB, pid);
+                    strcpy(jobs[back_g].job_name, CURR_JOB);
+                    jobs[back_g].PID = CHILD_ID;
+                    back_g++;
+               }
+          }
+
+          else
+          {
+               strcpy(jobs[back_g].job_name, args[0]);
+               
+               for(int i = 1; i < no_args-1; i++)
+               {
+                    strcat(jobs[back_g].job_name, " ");
+                    strcat(jobs[back_g].job_name, args[i]);
+               }
+
+               jobs[back_g].PID = pid;
+               back_g++;
+
+               printf("[%d] %d\n", back_g, pid);
+          }
+     }
+
+     return;
+}
 int main()
 { 
 	pid_t pid; 
@@ -667,6 +799,7 @@ int main()
 	updatePath(currentDirtoryPath, isP1set);
 	returnPaths(directoryPaths, path, countColonPresentInPath(path)); // default path is this
 	
+	signal(SIGINT,handler);
 
 	// Maintaining history here
 	LinkedList tail;
