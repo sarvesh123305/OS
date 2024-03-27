@@ -26,15 +26,16 @@ typedef struct Node
 	struct Node *prev;
 
 } Node;
-struct bg_job
+struct backJob
 {
     char job_name[300];
     pid_t PID;  
 };
 
-typedef struct bg_job bg_job;
-bg_job jobs[50];
-
+typedef struct backJob backJob;
+backJob jobs[50];
+void handleBackgroundJobs(char **args, int argCount);
+void displayJobs();
 typedef Node *LinkedList;
 
 void initList(LinkedList *node)
@@ -593,6 +594,13 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 		{
 			//YET TO DO This, till then ignore background jobs so as to bypass errors
 			arguments[argCount-1] = '\0';
+			handleBackgroundJobs(arguments,argCount);
+			return 10;
+		}
+		else if(argCount == 1 && !strcmp(arguments[0] , "jobs")) //Displaying all jobs
+		{
+			displayJobs();
+			return 10;
 		}
 		int pid = fork();
 		if (pid == FORK_FAILURE)
@@ -667,69 +675,70 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 			// wait(NULL); // parent waiting for a child
 		}
 	}
-void handler(int num){
+void handlerCtrlC(int num){
 	// write(STDOUT_FILENO,"I won't die\n",13);
-	
 }
-
+	pid_t CHILD_ID = -1;
+	char CURR_JOB[2000];
+	int backgroundJob = 0;
 void shift(int i)
 {
-     for(int j=i; j < back_g-1; j++)
+     for(int j=i; j <= backgroundJob; j++)
      {
-          strcpy(jobs[i].job_name, jobs[i+1].job_name);
-          jobs[i].PID = jobs[i+1].PID;
+          strcpy(jobs[j].job_name, jobs[j+1].job_name);
+          jobs[j].PID = jobs[j+1].PID;
      }
      
-     back_g--;
+     backgroundJob--;
 }
 void handler(int sig)
 {
      int x;
      pid_t pid = waitpid(-1, &x, WNOHANG);
-
      if(pid > 0)
      {
-          char str[200]; int f =0;
-          for(int i=0; i < back_g; i++)
+          char str[200]; int flag =0;
+          for(int i=0; i < backgroundJob; i++)
           {
                if(jobs[i].PID == pid)
                {
 
                     strcpy(str, jobs[i].job_name);
                     shift(i);
-                    f = 1;      
+                    flag = 1;      
                     break;
                }
           }
 
-          if(WEXITSTATUS(x) == 0 && WIFEXITED(x) && f)
+          if(WEXITSTATUS(x) == 0 && WIFEXITED(x) && flag) 	//Process execution done successfullyy
           fprintf(stderr,"\033[1;31m\n%s with PID %d exited normally\n\033[0m", str, pid);
-     
-          else if(f) fprintf(stderr,"\033[1;31m\n%s with PID %d failed to exit normally\n\033[0m",str, pid);
-          
-          if(f) prompt();
-          fflush(stdout);
+
+          else if(flag) fprintf(stderr,"\033[1;31m\n%s with PID %d failed to exit normally\n\033[0m",str, pid);
+          if(flag)
+		  	displayPrompt();
      }
      
      return;
 }
 
-void run(char **args, int no_args, int bg)
-{
-     int status;
-     pid_t pid = fork(), wpid;
-     args[no_args] = NULL;
 
-     if (pid < 0) 
+void handleBackgroundJobs(char **args, int argCount)
+{
+    int status;
+    pid_t pid = fork(), wpid;
+
+    //  args[argCount] = NULL;
+     if (pid == FORK_FAILURE) 
      {    
           perror("Error");
           exit(EXIT_FAILURE);
      }
 
-     else if (pid == 0) 
+     else if (pid == CHILD) 
      {   
-          setpgid(0, 0);
-          if (execvp(args[0], args) < 0) 
+          setpgid(0, 0);//making process parent as 0  so as to disassociate it from curr proc
+		//   perror("CHILD IT IS ");
+          if (execvp(args[0], args) < 0) //Testings
           {     
                perror("Command not found");
                exit(EXIT_FAILURE);
@@ -737,56 +746,59 @@ void run(char **args, int no_args, int bg)
      }
      else 
      {
-          if(bg == 0)
-          {
+				// perror("Should I enter"); //Dont wait for the job to complete just push to bg jobs
 
-               CHILD_ID = pid;
-               strcpy(CURR_JOB, args[0]);
+			   strcpy(jobs[backgroundJob].job_name, args[0]);
                
-               for(int i = 1; i < no_args-1; i++)
+               for(int i = 1; i < argCount-1; i++)
                {
-                    strcat(CURR_JOB, " ");
-                    strcat(CURR_JOB, args[i]);
+                    strcat(jobs[backgroundJob].job_name, " ");
+                    strcat(jobs[backgroundJob].job_name, args[i]);
                }
 
-               signal(SIGTTIN, SIG_IGN);
-
-               signal(SIGTTOU, SIG_IGN);
-               tcsetpgrp(STDIN_FILENO, pid);
-               //signal(SIGTSTP, ctrl_z);
-               wpid = waitpid(pid, &status, WUNTRACED);
-               tcsetpgrp(STDIN_FILENO, getpgrp());
-               signal(SIGTTIN, SIG_DFL);
-               signal(SIGTTOU, SIG_DFL);
-
-               if(WIFSTOPPED(status))
-               {
-
-                    printf("%s with PID %d suspended\n", CURR_JOB, pid);
-                    strcpy(jobs[back_g].job_name, CURR_JOB);
-                    jobs[back_g].PID = CHILD_ID;
-                    back_g++;
-               }
-          }
-
-          else
-          {
-               strcpy(jobs[back_g].job_name, args[0]);
-               
-               for(int i = 1; i < no_args-1; i++)
-               {
-                    strcat(jobs[back_g].job_name, " ");
-                    strcat(jobs[back_g].job_name, args[i]);
-               }
-
-               jobs[back_g].PID = pid;
-               back_g++;
-
-               printf("[%d] %d\n", back_g, pid);
-          }
+               jobs[backgroundJob].PID = pid;
+               backgroundJob++;
+               printf("[%d] %d\n", backgroundJob, pid);
+				// perror("LALAL");
+			 
      }
-
+	//  printf("SUCCEESSS");
      return;
+}
+
+char * read_file(char *filename, int n)
+{   
+    FILE* file = fopen(filename, "r");
+    char line[MAX_LEN];
+    char *info = malloc(sizeof(char) *MAX_LEN);
+    int i = 0;
+    while (fgets(line, sizeof(line), file)) 
+    {
+        i++;
+        if(i == n)
+            strcpy(info, line);
+    }
+    fclose(file);
+    return info;
+} 
+
+void displayJobs(){
+	char processes[MAX_LEN];
+	for(int i = 0 ; i < backgroundJob; i++){
+		sprintf(processes,"/proc/%d/status",jobs[i].PID);
+		FILE *fp = fopen(processes,"r");
+		if(!fp)
+			return ;
+		
+		char *statusInfo = read_file(processes, 3); //Get process state by reading file 3 bcoz start from 3 rd line
+		char *temp = statusInfo;
+		statusInfo = strtok(statusInfo, " :\n\t\r");	//Pulling out state from state:RUNNING
+		statusInfo = strtok(NULL, " :\n\t\r");
+
+		strcpy(statusInfo, "Running");
+
+		printf("[%d] %s %s [%d]\n",i+1, statusInfo, jobs[i].job_name, jobs[i].PID);
+	}	
 }
 int main()
 { 
@@ -799,7 +811,7 @@ int main()
 	updatePath(currentDirtoryPath, isP1set);
 	returnPaths(directoryPaths, path, countColonPresentInPath(path)); // default path is this
 	
-	signal(SIGINT,handler);
+	signal(SIGINT,handlerCtrlC);
 
 	// Maintaining history here
 	LinkedList tail;
@@ -807,7 +819,8 @@ int main()
 	initList(&tail);
 	initList(&iterator);
 	initialLoadLinkedList(&tail);
-	
+	signal(SIGCHLD, handler);
+
 	while (1)
 	{
 		strcpy(path, getenv("CUST_PATH"));

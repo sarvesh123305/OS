@@ -62,3 +62,146 @@ sleep 10
 clear
 nautilus .
 clear
+nautilus . &
+clear
+clear
+nautilus . &\
+nautilus . &
+nautilus . &
+nautilus . & 
+ls
+clear
+nautilus . &
+clear
+clear
+clear
+ls
+nautilus . &
+clear
+nautilus . & 
+clear
+nautilus .
+clear
+sleep 10
+ls
+clear
+nautilus .
+clear
+sleep 10
+clear
+sleep 10
+clear
+[A
+nautilus /
+nautilus .
+nautilus . &
+clear
+sleep 10 &
+ls
+ls
+ls
+ls
+ls
+ls
+ls
+ls
+ls
+clear
+clear
+sleep 10 &
+ls
+sleep 5 &
+clear
+sleep 10 &
+sleep 10 &
+sda
+clear
+sleep 10 &
+sleep 10 &
+sleep 10 &
+sleep 10 &
+sleep 10 &
+clear
+sleep 10 &
+clear
+ls
+clear
+sleep 10 &
+clear
+clear
+sleep 10 &
+ls
+sleep 10 &
+sleep 10 &
+ls
+clear
+clear
+sleep 10 &
+sleep 10 &
+sleep 10 &
+ls
+sleep 10 &
+ls
+sleep 10 &
+ls
+clear
+l
+ls
+clear
+sleep 10
+sleep 10 &
+clear
+sleep 10
+sleep 10 &
+ls
+clear
+sleep 5 &
+ls
+clear
+sleep 10 &\
+ls
+sleep 10 &
+ls
+ls
+clear
+sleep 2 &
+ls
+bg
+fg
+jobs
+sleep 10000 &
+jobs
+ls
+sleep 1000 &
+ls
+jobs
+sleep 1000 &
+jobs
+jobs
+sleep 1000 &
+jobs
+cat /proc/29093/status
+cat /proc/29093/status | grep PPid
+clear
+sleep 1000 &
+jobs
+sleep 100 &
+jobs
+jobs
+sleep 1000 &
+jobs
+[A
+clear
+ls
+sleep 10000 &
+jobs
+sleep 100 &
+jobs
+clear
+sleep 1000 &
+jobs
+sleep 5 &
+jobs
+jobs
+sleep 10 &
+jobs
