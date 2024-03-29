@@ -19,6 +19,7 @@
 #define INPUTREDIRECTION 'I'
 #define OUTPUTREDIRECTION 'O'
 #define NOTPOSSIBLE -1
+#define DELIMITER " \t\r\n\a"
 
 typedef struct Node
 {
@@ -148,6 +149,14 @@ void removeTrailingSpacesIfAny(char *buf)
 	}
 	memmove(buf, buf + i, len - i + 1); // +1 to copy the null terminator
 	return;
+}
+void removeExtraSpaceAtEnd(char *buf){
+	for(int i = MAX_LEN-1; i >= 0 ; i--){
+		if(isalpha(buf[i]))
+			break;
+		else 
+			buf[i] = '\0'; // null 
+	}
 }
 void checkSpecialCharactersPresentInFront(char *buf)
 {
@@ -437,32 +446,112 @@ int getPipelinePresentStatus(char *buf,int bufferLength){
 
 	return 0;
 }
-static void
-pipeline(char *argv[MAX_LEN])
+char **splitline(char *line)
 {
-	int pipefd[2],status,done = 0 ;
+  int bufsize = MAX_LEN, position = 0;
+  char **tokens = malloc(bufsize * sizeof(char*));
+  char *token, **tokens_backup;
+
+  if (!tokens) {
+    fprintf(stderr, "dynamic memory allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  token = strtok(line, DELIMITER);
+  while (token != NULL) {
+    if(token[0]=='*'||token[strlen(token)-1]=='*'){
+	DIR *d;
+ 	 struct dirent *dir;
+ 	 d = opendir(".");
+ 	 if (d) {
+ 	   while ((dir = readdir(d)) != NULL) {
+		if(dir->d_name[0]!='.'){
+			if(strlen(token)==1||(token[0]=='*'&&(!strncmp(token+1,(dir->d_name+strlen(dir->d_name)-strlen(token)+1),strlen(token)-1)))||(token[strlen(token)-1]=='*'&&(!strncmp(token,dir->d_name,strlen(token)-1)))){
+ 	     	 tokens[position] = dir->d_name;
+    		position++;}}
+ 		}
+ 	   closedir(d);
+ 	 }
+	}
+    else{tokens[position] = token;
+    position++;}
+
+    if (position >= bufsize) {
+      bufsize += MAX_LEN;
+      tokens_backup = tokens;
+      tokens = realloc(tokens, bufsize * sizeof(char*));
+      if (!tokens) {
+		free(tokens_backup);
+        fprintf(stderr, "dynamic memory allocation error\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    token = strtok(NULL, DELIMITER);
+  }
+  tokens[position] = NULL;
+  return tokens;
+}
+int my_pipe(char *line)
+{
+	int i,commandc=0,numpipes=0,status;
 	pid_t pid;
-	pipe(pipefd); //Create pipe
-for(int i = 0 ; i < 3;i++)
-				printf("%s",argv[i]);
-	pid = fork();
-	if(pid == CHILD){
-		dup2(pipefd[1],STDOUT_FILENO);
-		execlp(argv[0],argv[0],(char*)NULL);
+	char **args;
+	for (i = 0; line[i]!='\0'; i++) 
+    	{if(i>0){if(line[i]=='|'&&line[i+1]!='|'&&line[i-1]!='|'){numpipes++;}}}
+	int* pipefds=(int*)malloc((2*numpipes)*sizeof(int));
+	char* token=(char*)malloc((128)*sizeof(char));
+	token=strtok_r(line,"|",&line);
+	for( i = 0; i < numpipes; i++ ){	
+    		if( pipe(pipefds+i*2) < 0 ){perror("pipe creation failed");return 3;}
 	}
-	pid = fork();
-	if(pid == CHILD)
-	{
-		close(pipefd[1]);
-		dup2(pipefd[0],STDIN_FILENO);
-		execlp(argv[2],argv[2],(char*)NULL);
+	do{
+	    pid = fork();
+	    if( pid == 0 ){//child process
+	        if( commandc!=0 ){
+	           	if( dup2(pipefds[(commandc-1)*2], 0) < 0){perror("child couldnt get input");exit(1);}
+        	}
+        	if( commandc!=numpipes){
+            		if( dup2(pipefds[commandc*2+1], 1) < 0 ){perror("child couldnt output");exit(1);}
+       	 	}
+            for( i = 0; i < 2*numpipes; i++ ){close(pipefds[i]);}
+	    args=splitline(token);
+            execvp(args[0],args);
+            perror("exec failed");exit(1);
+ 	    } 
+	    else if( pid < 0 ){perror("fork() failed");return 3;}//fork error
+ 	    commandc++;//parent process
 	}
+	while(commandc<numpipes+1&&(token=strtok_r(NULL,"|",&line)));
+	for( i = 0; i < 2*numpipes; i++ ){close(pipefds[i]);}
+	free(pipefds);
+	return 1;
+}
+ void
+pipeline(char *cmd[MAX_LEN][MAX_LEN],int countArgs)
+{
+	//SINGLE PIPE CODE
+	// int pipefd[2],status,done = 0 ; 
+	// pid_t pid;
+	// pipe(pipefd); //Create pipe
+	// pid = fork();
+	// if(pid == CHILD){
+	// 	dup2(pipefd[1],STDOUT_FILENO);
+	// 	execlp(argv[0],argv[0],(char*)NULL);
+	// }
+	// pid = fork();
+	// if(pid == CHILD)
+	// {
+	// 	close(pipefd[1]);
+	// 	dup2(pipefd[0],STDIN_FILENO);
+	// 	execlp(argv[2],argv[2],(char*)NULL);
+	// }
 
-	close(pipefd[0]);
-	close(pipefd[1]);
+	// close(pipefd[0]);
+	// close(pipefd[1]);
 
-	waitpid(-1,&status,0);
-	waitpid(-1,&status,0);
+	// waitpid(-1,&status,0);
+	// waitpid(-1,&status,0);
 }
 int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX_LEN][MAX_LEN],char *currentDirtoryPath
 ,LinkedList *tail,char *path){
@@ -476,62 +565,41 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 
 		int isPipelinePresent = getPipelinePresentStatus(buf,bufferLength);
 		if(1)
-		{
-			// printf("\nYET TO IMPLEMENT >>> DONT DO THIS\n");
-			// char tempUse[MAX_LEN] = "ls -al | rev";
-			// // char*** sad = split_commands(tempUse);
-			// char tempCopy[MAX_LEN];
-			// strcpy(tempCopy, tempUse); // Create a copy of tempUse
-			// char *tokensize = strtok(tempCopy,"|");
-			// char **cmd[MAX_LEN];
-			// char *tempArguements[MAX_LEN];
-			// int k = 0 ;
-			// while(tokensize){
-			// 	int argCount = 0;
-			// 	tempArguements[k++] = tokensize;
-			// 	// printf("\nDhirubhai %s",tokensize);
-			// 	tokensize = strtok(NULL, "|");
-			// }
-			// tempArguements[k] = NULL;
-			// for (int i = 0; i < k; i++) {
-			// 	int uselesscounter = 0;
-			// 	cmd[i] = malloc(sizeof(char*) * MAX_LEN); 
-			// 	setArguements(tempArguements[i],cmd[i],&uselesscounter);
-			// }
-			// cmd[k] = malloc(sizeof(char*) * MAX_LEN); 
-			// *cmd[k] = NULL;
-			//  printf("Commands:\n");
-			// for (int i = 0; i < k; i++) {
-			// 	// printf("Command %d:", i + 1);
-			// 	int j = 0;
-			// 	int count = 0 ;
-			// 	while (cmd[i][j]) {
-			// 		// printf("%s ", cmd[i][j]);
-			// 		j++;
-			// 	}
-			// 	cmd[i][j] = NULL;
-			// 	cmd[i][j+1] = NULL;
-			// 	// printf("%s",cmd[i][j]);
-			// 	// printf("%s",cmd[i][j+1]);
+		{	
+			my_pipe(buf);
+			exit(0);
+			char *arguments[MAX_LEN];
+			int argCount = 0 ;
+			// setArguements(buf, arguments, &argCount);
+			
+			char *token = strtok(buf,"|");
+			int countArgs = 0 ;
+			while(token){
+				removeTrailingSpacesIfAny(token);
+				removeExtraSpaceAtEnd(token);
+				// printf("\n%s token",token);
+				arguments[countArgs++] = strdup(token);
+				token = strtok(NULL,"|");
+			}
+			char *cmd[MAX_LEN][MAX_LEN];
+			for(int i = 0 ; i < countArgs; i++){
+				int tempCount = 0 ;
+				char *tempArgs[MAX_LEN];
+				setArguements(arguments[i],tempArgs,&tempCount);
+				// cmd[i] = strdup(tempArgs);	
+				for(int j = 0 ; j < tempCount ; j++)
+					cmd[i][j] = strdup(tempArgs[j]);	
+					// printf("[%s]",tempArgs[i]);
+				// printf("\n{}");
+			}
 
-			// 	// printf("\n");
-			// }
-			// cmd[k+1] = malloc(sizeof(char*) * MAX_LEN); 
-			// *cmd[k+1] = NULL;
-			// for (int i = 0; i < k; i++) {
-			// 	for(int j = 0 ; j < 4; j++)
-			// 			printf("%s ",cmd[i][j]);
-			// 			printf("\n");
-			// }
-			// printf("%s ",cmd[k-1][1]);
-
-			// char *ls[] = {"ls","-al",NULL};
-			// char *rev[] = {"rev", NULL};
-			// char *nl[] = {"nl", NULL};
-			// char *cat[] = {"cat", "-e", NULL};
-			// char **cmd[] = { ls,rev, nl, cat, NULL};
-			pipeline(arguments);
-			// pipeline(sad);
+			for(int i = 0 ; i < countArgs ; i++){
+				int j = 0 ;
+					while(cmd[i][j] && j < MAX_LEN)
+							printf("%s",cmd[i][j++]);
+					printf("\n");
+			}
+			// pipeline(cmd,countArgs);
 				exit(0);
 		}
 
@@ -820,6 +888,7 @@ int main()
 		 	break;
 		 }
 		removeTrailingSpacesIfAny(buf);
+		removeExtraSpaceAtEnd(buf);
 		int bufferLength = strlen(buf);
 		appendToFileAndLinkedList(&tail,buf);
 		mainFunction(buf,bufferLength,&isP1set,directoryPaths,currentDirtoryPath,&tail,path);
