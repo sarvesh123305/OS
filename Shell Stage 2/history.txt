@@ -205,3 +205,14 @@ jobs
 jobs
 sleep 10 &
 jobs
+ls | wc
+ls | wc
+ls
+ls | wc
+ls | wc
+ls | wc
+ls |wc
+ls|wc
+ls|wc
+ls|wc
+ls|wc

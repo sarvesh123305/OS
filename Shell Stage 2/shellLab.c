@@ -438,42 +438,31 @@ int getPipelinePresentStatus(char *buf,int bufferLength){
 	return 0;
 }
 static void
-pipeline(char ***cmd)
+pipeline(char *argv[MAX_LEN])
 {
-	int fd[2];
+	int pipefd[2],status,done = 0 ;
 	pid_t pid;
-	int fdd = 0;				/* Backup */
-	while (*cmd != NULL) {
-
-		pipe(fd);				/* Sharing bidiflow */
-		if ((pid = fork()) == -1) {
-			printf("Fork failed");
-			perror("fork");
-
-			exit(1);
-		}
-		else if (pid == 0) {
-			dup2(fdd, 0);
-			if (*(cmd + 1) != NULL) {
-				dup2(fd[1], 1);
-			}
-			close(fd[0]);
-			execvp((*cmd)[0], *cmd);
-			// char directoryPaths[MAX_LEN][MAX_LEN];
-			// char *path = getenv("PATH"); // sets default path to that of shell path
-			// setenv("CUST_PATH", path, 1);
-			// int colonPresent = 0;
-			// returnPaths(directoryPaths, path, countColonPresentInPath(path)); // default path is this
-			// customExecvpWithPath(countColonPresentInPath(path),directoryPaths,*cmd);
-			exit(1);
-		}
-		else {
-			wait(NULL); 		/* Collect childs */
-			close(fd[1]);
-			fdd = fd[0];
-			cmd++;
-		}
+	pipe(pipefd); //Create pipe
+for(int i = 0 ; i < 3;i++)
+				printf("%s",argv[i]);
+	pid = fork();
+	if(pid == CHILD){
+		dup2(pipefd[1],STDOUT_FILENO);
+		execlp(argv[0],argv[0],(char*)NULL);
 	}
+	pid = fork();
+	if(pid == CHILD)
+	{
+		close(pipefd[1]);
+		dup2(pipefd[0],STDIN_FILENO);
+		execlp(argv[2],argv[2],(char*)NULL);
+	}
+
+	close(pipefd[0]);
+	close(pipefd[1]);
+
+	waitpid(-1,&status,0);
+	waitpid(-1,&status,0);
 }
 int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX_LEN][MAX_LEN],char *currentDirtoryPath
 ,LinkedList *tail,char *path){
@@ -490,7 +479,7 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 		{
 			// printf("\nYET TO IMPLEMENT >>> DONT DO THIS\n");
 			// char tempUse[MAX_LEN] = "ls -al | rev";
-			// char*** sad = split_commands(tempUse);
+			// // char*** sad = split_commands(tempUse);
 			// char tempCopy[MAX_LEN];
 			// strcpy(tempCopy, tempUse); // Create a copy of tempUse
 			// char *tokensize = strtok(tempCopy,"|");
@@ -541,9 +530,9 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 			// char *nl[] = {"nl", NULL};
 			// char *cat[] = {"cat", "-e", NULL};
 			// char **cmd[] = { ls,rev, nl, cat, NULL};
-			// // pipeline(cmd);
+			pipeline(arguments);
 			// pipeline(sad);
-			// 	exit(0);
+				exit(0);
 		}
 
 		char *outputFile = NULL, *inputFile = NULL, *args[MAX_LEN], *arguments[MAX_LEN];
