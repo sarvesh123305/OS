@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> 		
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -11,7 +11,6 @@
 #include <ncurses.h>
 #include <sys/termios.h>
 
-
 #define MAX_LEN 150
 #define FORK_FAILURE -1
 #define CHILD 0
@@ -19,15 +18,15 @@
 #define INPUTREDIRECTION 'I'
 #define OUTPUTREDIRECTION 'O'
 #define NOTPOSSIBLE -1
-#define DELIMITER " \t\r\n\a"
+#define DELIMITER " \t\n"  // check space,tabs,newline
 
-typedef struct Node
+typedef struct Node 		//Maintaining History
 {
 	char data[MAX_LEN];
 	struct Node *prev;
 
 } Node;
-struct backJob
+struct backJob 				//Handling Background Jobs
 {
     char job_name[300];
     pid_t PID;  
@@ -35,9 +34,10 @@ struct backJob
 
 typedef struct backJob backJob;
 backJob jobs[50];
+typedef Node *LinkedList;
+
 void handleBackgroundJobs(char **args, int argCount);
 void displayJobs();
-typedef Node *LinkedList;
 
 void initList(LinkedList *node)
 {
@@ -63,7 +63,7 @@ void append(LinkedList *node, char *str)
 }
 
 void initialLoadLinkedList(LinkedList *tail){
-	FILE *file = fopen("history.txt", "r"); 
+	FILE *file = fopen("history.txt", "r"); //fopen  buffering IO ,faster
     if (!file) {
 		return ;
     }
@@ -86,16 +86,16 @@ void appendToFileAndLinkedList(LinkedList* tail,char *str){
 		append(tail,str);
 	    fclose(file);
 }
-void upsideDown(Node* iterator){
+void reverseDisplayHistory(Node* iterator){
 	if(!iterator)
 		return ;
-	upsideDown(iterator -> prev);
+	reverseDisplayHistory(iterator -> prev);
 	printf("%s",iterator->data);
 }
 void displayHistory(LinkedList tail){
 	Node* iterator  = tail;
 	printf("\nHISTORY DATA : \n");
-	upsideDown(iterator);
+	reverseDisplayHistory(iterator);
 }
 void freeList(LinkedList *tail){
 	Node* current = *tail;
@@ -357,12 +357,14 @@ int checkForCustomCommands(int argCount, char *arguments[MAX_LEN], char *current
 	return 0;
 }
 int setRedirection(char *command, int *hasInput, int *hasOutput, char **outputFile, char **inputFile, char *args[MAX_LEN])
-{
+{	
+	*hasInput = 0, *hasOutput = 0;
 	char *outputTokens[2], *inputTokens[2];
 
 	char *inputPointer = strstr(command, "<"); // string from <
-	*hasInput = !(inputPointer == NULL), *hasOutput = 0;
 
+	if(inputPointer)
+		*hasInput = 1;
 	char *outputPointer = strstr(command, ">");
 	if (outputPointer)
 		*hasOutput = 1;
@@ -380,7 +382,6 @@ int setRedirection(char *command, int *hasInput, int *hasOutput, char **outputFi
 	inputTokens[0] = outputTokens[0];
 	if (*hasInput)
 	{
-
 		inputTokens[0] = strtok(inputTokens[0], "<");
 		inputTokens[1] = strtok(NULL, "<");
 	}
@@ -450,49 +451,47 @@ char **splitline(char *line)
 {
   int bufsize = MAX_LEN, position = 0;
   char **tokens = malloc(bufsize * sizeof(char*));
-  char *token, **tokens_backup;
+  
 
   if (!tokens) {
-    fprintf(stderr, "dynamic memory allocation error\n");
+    perror("Malloc failed");
     exit(EXIT_FAILURE);
   }
 
-  token = strtok(line, DELIMITER);
+  char *token = strtok(line, DELIMITER);
   while (token != NULL) {
-    if(token[0]=='*'||token[strlen(token)-1]=='*'){
-	DIR *d;
- 	 struct dirent *dir;
- 	 d = opendir(".");
- 	 if (d) {
- 	   while ((dir = readdir(d)) != NULL) {
-		if(dir->d_name[0]!='.'){
-			if(strlen(token)==1||(token[0]=='*'&&(!strncmp(token+1,(dir->d_name+strlen(dir->d_name)-strlen(token)+1),strlen(token)-1)))||(token[strlen(token)-1]=='*'&&(!strncmp(token,dir->d_name,strlen(token)-1)))){
- 	     	 tokens[position] = dir->d_name;
-    		position++;}}
- 		}
- 	   closedir(d);
- 	 }
-	}
-    else{tokens[position] = token;
-    position++;}
+    // if(token[0]=='*'||token[strlen(token)-1]=='*'){
+ 	//  struct dirent *dir;
+ 	//  DIR *d = opendir(".");
+ 	//  if (d) {
+ 	//    while ((dir = readdir(d)) != NULL) {
+	// 	if(dir->d_name[0]!='.'){
+	// 		if(strlen(token)==1||(token[0]=='*'&&(!strncmp(token+1,(dir->d_name+strlen(dir->d_name)-strlen(token)+1),strlen(token)-1)))||(token[strlen(token)-1]=='*'&&(!strncmp(token,dir->d_name,strlen(token)-1)))){
+ 	//      	 tokens[position] = dir->d_name;
+    // 		position++;}}
+ 	// 	}
+ 	//    closedir(d);
+ 	//  }
+	// }
+   tokens[position++] = token;
 
-    if (position >= bufsize) {
-      bufsize += MAX_LEN;
-      tokens_backup = tokens;
-      tokens = realloc(tokens, bufsize * sizeof(char*));
-      if (!tokens) {
-		free(tokens_backup);
-        fprintf(stderr, "dynamic memory allocation error\n");
-        exit(EXIT_FAILURE);
-      }
-    }
+    // if (position >= bufsize) {
+    //   bufsize += MAX_LEN;
+    //   tokens_backup = tokens;
+    //   tokens = realloc(tokens, bufsize * sizeof(char*));
+    //   if (!tokens) {
+	// 	free(tokens_backup);
+    //     fprintf(stderr, "dynamic memory allocation error\n");
+    //     exit(EXIT_FAILURE);
+    //   }
+    // }
 
     token = strtok(NULL, DELIMITER);
   }
   tokens[position] = NULL;
   return tokens;
 }
-int my_pipe(char *line)
+int testPipe(char *line)
 {
 	int i,commandc=0,numpipes=0,status;
 	pid_t pid;
@@ -566,7 +565,7 @@ int mainFunction(char *buf,int bufferLength,int *isP1set,char directoryPaths[MAX
 		int isPipelinePresent = getPipelinePresentStatus(buf,bufferLength);
 		if(1)
 		{	
-			my_pipe(buf);
+			testPipe(buf);
 			exit(0);
 			char *arguments[MAX_LEN];
 			int argCount = 0 ;
