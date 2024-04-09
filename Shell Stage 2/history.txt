@@ -225,4 +225,42 @@ ls | wc
 ls | wc
 ls | wc
 ls | wc
-ls | wcls | wcls | wcls | wcgcc | wcls | wcls -a | wcls -a -w | wcls -ld | wcls | wcls|wcls | wcls -la -lf | wc -lls -la -ld | wc -lls -ls | wcls -la | wcls -ls | wcls -la -ld | wc[Als -ld | wcls -la ld | wcls -la -ld | wc[Als -la -ld | wc -la -ldls -la -ld | wc -la -ldls -la -ld | wc -la -ldls | wcls | wcls -la | wc -lls -la  | wc -ldls | wc | nlcat history.txt > abc > sarccatcatvi aacat < sacat sa > sanket > sarveshls | wcls | wcls -la | wc
+ls | wcls | wcls | wcls | wcgcc | wcls | wcls -a | wcls -a -w | wcls -ld | wcls | wcls|wcls | wcls -la -lf | wc -lls -la -ld | wc -lls -ls | wcls -la | wcls -ls | wcls -la -ld | wc[Als -ld | wcls -la ld | wcls -la -ld | wc[Als -la -ld | wc -la -ldls -la -ld | wc -la -ldls -la -ld | wc -la -ldls | wcls | wcls -la | wc -lls -la  | wc -ldls | wc | nlcat history.txt > abc > sarccatcatvi aacat < sacat sa > sanket > sarveshls | wcls | wcls -la | wcls | wcls -l | grep "a.out" | wcls -l | grep "a.out" | wcls | wclsls | wcls
+ls | wcls > aa | wclsclearPATH=/binls
+clear
+lslslsls;slsls[Alslslslslsslslsslsslsslslslslslsslss[Alsclear[Alsclearlslslsclearls
+ls
+ls
+ls
+ls
+[Aclearls
+ls
+ls -llsclearls
+lswcwclslslslslslslsls -lls
+lslsclearls
+clearlslslslsclearls
+lslslslslslslslslslslslslslslslslsclearls
+clearls
+lsclearls
+lslslsclearls
+lslsclearls
+clearls
+lsclearlslslsclearls
+clearls
+lsclearls
+clearls
+clearls
+lsclearls
+lsclearls
+lsclearls
+clearls
+ls
+ls
+clearls
+exitls | grep abc | wcclear
+exit
+nautilusjobs
+sleepsleepsleep --helpsleep 10s
+sleep 100ssleepsleep 10ssleep 10ssleep 10slssleepsleep 10ssleep 10ssleep 10ssleep 10ssleep 10s &sleep 100 &sleep 50 &jobs
+sleep 100 &jobs
+bgsleep 20 &sleepsleep 10sjobs
